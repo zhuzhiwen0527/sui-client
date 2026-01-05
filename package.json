@@ -1,0 +1,36 @@
+{
+  "name": "sui-jsonrpc-proxy",
+  "version": "1.0.0",
+  "description": "JSON-RPC to Sui gRPC proxy service using Koa",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "node test/test.js",
+    "test:mocha": "mocha test/*.spec.js --timeout 10000",
+    "test:checkpoints": "mocha test/checkpoints.spec.js --timeout 10000",
+    "test:checkpoints:individual": "mocha test/checkpoints.individual.spec.js --timeout 10000"
+  },
+  "keywords": [
+    "sui",
+    "jsonrpc",
+    "grpc",
+    "koa",
+    "proxy"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@mysten/sui": "^1.45.2",
+    "koa": "^2.15.0",
+    "koa-bodyparser": "^4.4.1",
+    "koa-router": "^12.0.1",
+    "koa-logger": "^3.2.1"
+  },
+  "devDependencies": {
+    "axios": "^1.6.0",
+    "mocha": "^10.2.0",
+    "chai": "^4.3.10"
+  }
+}
+
