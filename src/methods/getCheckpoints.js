@@ -43,13 +43,58 @@ export function createGetCheckpointsHandler(grpcClient) {
           checkpointId: {
             oneofKind: 'sequenceNumber',
             sequenceNumber: sequence
+          },
+          // 获取完整数据，包括 transactions 和 summary
+          readMask: {
+            paths: [
+              'digest',
+              'sequence_number',
+              'summary',
+              'summary.epoch',
+              'summary.total_network_transactions',
+              'summary.previous_digest',
+              'summary.epoch_rolling_gas_cost_summary',
+              'summary.timestamp',
+              'summary.commitments',
+              'contents',
+              'contents.transactions',
+              'signature',
+              'signature.signature',
+              'signature.bitmap',
+              'signature.epoch'
+            ]
           }
         });
         
         if (result.response.checkpoint) {
-          checkpoints.push(result.response.checkpoint);
+          const checkpoint = result.response.checkpoint;
+          // 转换为 JSON-RPC 格式（扁平化结构）
+          const jsonRpcCheckpoint = {
+            epoch: checkpoint.summary?.epoch?.toString() || checkpoint.epoch?.toString(),
+            sequenceNumber: checkpoint.sequenceNumber?.toString() || checkpoint.summary?.sequenceNumber?.toString(),
+            digest: checkpoint.digest || checkpoint.summary?.digest,
+            networkTotalTransactions: checkpoint.summary?.totalNetworkTransactions?.toString(),
+            previousDigest: checkpoint.summary?.previousDigest,
+            epochRollingGasCostSummary: checkpoint.summary?.epochRollingGasCostSummary ? {
+              computationCost: checkpoint.summary.epochRollingGasCostSummary.computationCost?.toString(),
+              storageCost: checkpoint.summary.epochRollingGasCostSummary.storageCost?.toString(),
+              storageRebate: checkpoint.summary.epochRollingGasCostSummary.storageRebate?.toString(),
+              nonRefundableStorageFee: checkpoint.summary.epochRollingGasCostSummary.nonRefundableStorageFee?.toString()
+            } : undefined,
+            timestampMs: checkpoint.summary?.timestamp ? 
+              (BigInt(checkpoint.summary.timestamp.seconds || 0) * 1000n + BigInt(Math.floor((checkpoint.summary.timestamp.nanos || 0) / 1000000))).toString() :
+              undefined,
+            transactions: checkpoint.contents?.transactions?.map(tx => tx.transaction).filter(Boolean) || 
+                         checkpoint.transactions?.map(tx => tx.digest).filter(Boolean) || [],
+            checkpointCommitments: checkpoint.summary?.commitments || [],
+            validatorSignature: checkpoint.signature?.signature ? 
+              Buffer.from(checkpoint.signature.signature).toString('base64') : 
+              undefined
+          };
+          checkpoints.push(jsonRpcCheckpoint);
         }
       } catch (error) {
+        console.error(`Error getting checkpoint ${sequence}:`, error.message);
         // 如果 checkpoint 不存在，停止
         break;
       }

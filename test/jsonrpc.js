@@ -394,26 +394,20 @@ async function examples() {
     
     // 示例 11: 获取历史对象（需要先获取对象的版本号）
     console.log('\n=== 11. 获取历史对象 ===');
-    if (object.result?.data?.version) {
-      const version = object.result.data.version;
-      console.log(`Object ID: ${objectId}, Version: ${version}`);
-      try {
-      const pastObject = await client.tryGetPastObject("0x03db251ba509a8d5d8777b6338836082335d93eecbdd09a11e190a1cff51c352", version, {
-        showType: true,
-        showOwner: true,
-        showPreviousTransaction: true,
-        showDisplay: true,
-        showContent: true,
-        showBcs: true,
-        showStorageRebate: true
-      });
-      console.log('Past Object:', JSON.stringify(pastObject.result, null, 2));
-      } catch (error) {
-        console.error('Error:', error.message);
-      }
-    } else {
-      console.log('无法获取对象版本号，跳过此测试');
-    }
+    try {
+        const pastObject = await client.tryGetPastObject("0x68842897e2d982707e076d82da8ca5820687d38b6d990113954826afbcadb44e", 739779334, {
+          showType: true,
+          showOwner: true,
+          showPreviousTransaction: true,
+          showDisplay: true,
+          showContent: true,
+          showBcs: true,
+          showStorageRebate: true
+        });
+        console.log('Past Object:', JSON.stringify(pastObject.result, null, 2));
+        } catch (error) {
+          console.error('Try Get Past Object Error:', error.message);
+        }
     
     // 示例 12: 获取 USDC 代币元数据
     console.log('\n=== 12. 获取 USDC 代币元数据 ===');

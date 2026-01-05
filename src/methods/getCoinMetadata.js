@@ -1,7 +1,8 @@
 /**
  * suix_getCoinMetadata 处理器
- * 参数: [address]
+ * 参数: [coinType]
  * 对应: StateServiceClient.getCoinInfo
+ * JSON-RPC 返回格式: 直接返回 metadata 对象，如 { decimals, name, symbol, description, iconUrl, id }
  */
 export function createGetCoinMetadataHandler(grpcClient) {
   return async (params) => {
@@ -17,7 +18,22 @@ export function createGetCoinMetadataHandler(grpcClient) {
       coinType: coinType
     });
     
-    return result.response;
+    const response = result.response;
+    
+    // JSON-RPC 返回格式：直接返回 metadata 对象
+    if (response.metadata) {
+      return {
+        decimals: response.metadata.decimals,
+        name: response.metadata.name,
+        symbol: response.metadata.symbol,
+        description: response.metadata.description,
+        iconUrl: response.metadata.iconUrl,
+        id: response.metadata.id
+      };
+    }
+    
+    // 如果没有 metadata，返回空对象
+    return {};
   };
 }
 

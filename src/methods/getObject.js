@@ -46,12 +46,56 @@ export function createGetObjectHandler(grpcClient) {
     if (showBcs) readMaskPaths.push('bcs'); // 字段 1
     if (showStorageRebate) readMaskPaths.push('storage_rebate'); // 字段 11
     
-    const result = await grpcClient.ledgerService.getObject({
-      objectId: id,
-      readMask: readMaskPaths.length > 0 ? { paths: readMaskPaths } : undefined
-    });
-    
-    return result.response;
+    try {
+      const result = await grpcClient.ledgerService.getObject({
+        objectId: id,
+        readMask: readMaskPaths.length > 0 ? { paths: readMaskPaths } : undefined
+      });
+      
+      // GetObjectResponse 只有 object 字段，如果没有 object 说明对象不存在或已删除
+      if (!result.response.object) {
+        // 对象不存在或已删除，返回错误格式
+        return {
+          error: {
+            code: 'deleted',
+            object_id: id
+          }
+        };
+      }
+      
+      // 检查 object 是否有 error 字段（在某些情况下可能有）
+      if (result.response.object.error) {
+        return {
+          error: {
+            code: result.response.object.error.code || 'deleted',
+            object_id: id,
+            version: result.response.object.error.version,
+            digest: result.response.object.error.digest
+          }
+        };
+      }
+      
+      return result.response;
+    } catch (error) {
+      // 如果 gRPC 调用失败，检查错误信息
+      const errorMessage = error.message || '';
+      
+      // 如果对象不存在或已删除，返回错误格式而不是抛出异常
+      if (errorMessage.includes('not found') || 
+          errorMessage.includes('deleted') || 
+          errorMessage.includes('does not exist') ||
+          errorMessage.includes('ObjectNotFound')) {
+        return {
+          error: {
+            code: 'deleted',
+            object_id: id
+          }
+        };
+      }
+      
+      // 其他错误继续抛出，让 jsonrpc-handler 处理
+      throw error;
+    }
   };
 }
 

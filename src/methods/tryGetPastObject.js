@@ -52,13 +52,63 @@ export function createTryGetPastObjectHandler(grpcClient) {
     
     const versionBigInt = typeof version === 'string' ? BigInt(version) : BigInt(version);
     
-    const result = await grpcClient.ledgerService.getObject({
-      objectId: id,
-      version: versionBigInt,
-      readMask: readMaskPaths.length > 0 ? { paths: readMaskPaths } : undefined
-    });
-    
-    return result.response;
+    try {
+      const result = await grpcClient.ledgerService.getObject({
+        objectId: id,
+        version: versionBigInt,
+        readMask: readMaskPaths.length > 0 ? { paths: readMaskPaths } : undefined
+      });
+      
+      // GetObjectResponse 只有 object 字段
+      if (!result.response.object) {
+        // 对象不存在或已删除
+        return {
+          status: 'ObjectDeleted',
+          details: {
+            objectId: id,
+            version: versionBigInt
+          }
+        };
+      }
+      
+      // 检查 object 是否有 error 字段
+      if (result.response.object.error) {
+        return {
+          status: 'ObjectDeleted',
+          details: {
+            objectId: id,
+            version: result.response.object.error.version || versionBigInt,
+            digest: result.response.object.error.digest
+          }
+        };
+      }
+      
+      // 如果有 object，返回正常格式
+      return {
+        status: 'VersionFound',
+        details: result.response.object
+      };
+    } catch (error) {
+      // 如果 gRPC 调用失败，检查错误信息
+      const errorMessage = error.message || '';
+      
+      // 如果对象不存在或已删除，返回错误格式而不是抛出异常
+      if (errorMessage.includes('not found') || 
+          errorMessage.includes('deleted') || 
+          errorMessage.includes('does not exist') ||
+          errorMessage.includes('ObjectNotFound')) {
+        return {
+          status: 'ObjectDeleted',
+          details: {
+            objectId: id,
+            version: versionBigInt
+          }
+        };
+      }
+      
+      // 其他错误继续抛出，让 jsonrpc-handler 处理
+      throw error;
+    }
   };
 }
 
