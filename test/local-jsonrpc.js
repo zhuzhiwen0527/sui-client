@@ -312,10 +312,10 @@ async function examples() {
   // const client = createSuiClient('https://fullnode.mainnet.sui.io');
   
   // 测试参数
-  const account = '0x726e519182533186f3968b8d9cbe873309b4399da46bad17ece5004dff45123f';
-  const coinType = '0xdba34672e30cb065b1f93e3ab55318768fd6fef66c15942c9f7cb846e2f900e7::usdc::USDC';
-  const objectId = '0x68842897e2d982707e076d82da8ca5820687d38b6d990113954826afbcadb44e';
-  const transactionHash = '224PhAWDYpFBFFiWo4ZL3apU66c67MnqtgvnmCMLQdrS';
+  const account = '0x5b87c8e6e58daa108d73c90f0582aff6d355a7c74e2453a4a00f4c01b666cae2';
+  const coinType = '0x3a304c7feba2d819ea57c3542d68439ca2c386ba02159c740f7b406e592c62ea::haedal::HAEDAL';
+  const objectId = '0x8447e99d3344da18080fd19929f4659fea032e3f35743d1cef664b81a818d360';
+  const transactionHash = '4sAFo5Tr2WgxgFCy1bUF5edDQZCYTupcyDSw5E8GW9VD';
   
   try {
     // 示例 1: 获取参考 Gas 价格
@@ -398,24 +398,7 @@ async function examples() {
     } catch (error) {
       console.error('Get Transaction Block Error:', error.message);
     }
-    
-    // 示例 11: 获取历史对象（需要先获取对象的版本号）
-    console.log('\n=== 11. 获取历史对象 ===');
-    try {
-        const pastObject = await client.tryGetPastObject("0x68842897e2d982707e076d82da8ca5820687d38b6d990113954826afbcadb44e", 739779334, {
-          showType: true,
-          showOwner: true,
-          showPreviousTransaction: true,
-          showDisplay: true,
-          showContent: true,
-          showBcs: true,
-          showStorageRebate: true
-        });
-        console.log('Past Object:', JSON.stringify(pastObject.result, null, 2));
-        } catch (error) {
-          console.error('Try Get Past Object Error:', error.message);
-        }
-    
+        
     // 示例 12: 获取 USDC 代币元数据
     console.log('\n=== 12. 获取 USDC 代币元数据 ===');
     console.log(`Coin Type: ${coinType}`);
